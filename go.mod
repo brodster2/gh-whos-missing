@@ -1,4 +1,4 @@
-module gh-whos-missing
+module github.com/brodster2/gh-whos-missing
 
 go 1.19
 
