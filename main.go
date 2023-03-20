@@ -37,6 +37,8 @@ func run(teamName1, teamName2, token string) {
 		log.Fatalf("Something went wrong:\n%v\n", err)
 	}
 
+	fmt.Printf("%-20s %-20s %s\n", "Login", "Name", "Email")
+
 	for _, m := range inBoth {
 		login := *m.Login
 		var name string
@@ -55,30 +57,35 @@ func run(teamName1, teamName2, token string) {
 	}
 }
 
+func (gh GH) lookupTeam(ctx context.Context, team_slug string) ([]*github.User, error) {
+	split1 := strings.Split(team_slug, "/")
+	org := split1[0]
+	team := split1[1]
+	members, _, err := gh.client.Teams.ListTeamMembersBySlug(ctx, org, team, &github.TeamListTeamMembersOptions{})
+	if err != nil {
+		return []*github.User{}, err
+	}
+	return members, err
+}
+
 // Lookup team info
 // Get team membership of both teams
 // return members missing from second team
 func (gh GH) compare(ctx context.Context, slug1, slug2 string) ([]*github.User, error) {
-	split1 := strings.Split(slug1, "/")
-	org1 := split1[0]
-	team1 := split1[1]
-	team1Details, _, err := gh.client.Teams.ListTeamMembersBySlug(ctx, org1, team1, &github.TeamListTeamMembersOptions{})
+	team1members, err := gh.lookupTeam(ctx, slug1)
 	if err != nil {
 		return []*github.User{}, err
 	}
 
-	split2 := strings.Split(slug2, "/")
-	org2 := split2[0]
-	team2 := split2[1]
-	team2Details, _, err := gh.client.Teams.ListTeamMembersBySlug(ctx, org2, team2, &github.TeamListTeamMembersOptions{})
+	team2members, err := gh.lookupTeam(ctx, slug2)
 	if err != nil {
 		return []*github.User{}, err
 	}
 
 	var membersInBothTeams []*github.User
-	for _, m1 := range team1Details {
+	for _, m1 := range team1members {
 		present := false
-		for _, m2 := range team2Details {
+		for _, m2 := range team2members {
 			if *m1.Login == *m2.Login {
 				present = true
 			}
