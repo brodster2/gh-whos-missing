@@ -1,4 +1,4 @@
-module gh-team-compare
+module gh-whos-missing
 
 go 1.19
 
